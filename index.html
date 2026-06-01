@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beyond Compare - Premium Text, Table & Folder Comparator</title>
+    <meta name="description" content="A premium, state-of-the-art web application emulating Beyond Compare for professional folder sync, text comparisons, and tabular CSV/Excel sheets.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">⇄</div>
+                <div class="brand-name">
+                    <h1>Beyond Compare</h1>
+                    <p>Antigravity Premium Edition</p>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item active" id="nav-home">
+                    <span>🏠</span> Home Dashboard
+                </div>
+                <div class="nav-item" id="nav-folder">
+                    <span>📁</span> Folder Compare
+                </div>
+                <div class="nav-item" id="nav-text">
+                    <span>📝</span> Text Compare
+                </div>
+                <div class="nav-item" id="nav-table">
+                    <span>📊</span> Table Compare
+                </div>
+            </nav>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="theme-toggle" id="theme-toggle" title="Switch Theme">
+                <div class="theme-toggle-btn active" id="theme-dark-btn">🌙 Dark</div>
+                <div class="theme-toggle-btn" id="theme-light-btn">☀️ Light</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+
+        <!-- 1. HOME DASHBOARD -->
+        <section class="panel-view active" id="view-home">
+            <div class="dashboard-hero">
+                <h2>Premium File & Data Comparison Suite</h2>
+                <p>Align, review, and synchronize files, codebases, and spreadsheets with state-of-the-art visual precision.</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Folder Compare Tile -->
+                <div class="session-card" id="card-new-folder">
+                    <div class="session-card-icon">📁</div>
+                    <div class="session-card-title">Folder Compare</div>
+                    <div class="session-card-desc">Compare nested directory structures. Sync files side-by-side based on size, timestamps, or content hashes. Double-click files to compare immediately!</div>
+                </div>
+
+                <!-- Text Compare Tile -->
+                <div class="session-card" id="card-new-text">
+                    <div class="session-card-icon">📝</div>
+                    <div class="session-card-title">Text Compare</div>
+                    <div class="session-card-desc">Compare two source code files or text docs. Features custom syntax highlights, collapsible search ribbon, and character-level magnified diff drawers.</div>
+                </div>
+
+                <!-- Table Compare Tile -->
+                <div class="session-card" id="card-new-table">
+                    <div class="session-card-icon">📊</div>
+                    <div class="session-card-title">Table Compare</div>
+                    <div class="session-card-desc">Align spreadsheets and multi-sheet Excel files. Choose key columns to align records, customize date/numeric tolerances, and inspect cells in detail.</div>
+                </div>
+            </div>
+
+            <!-- Saved Comparison Sessions (localStorage) -->
+            <div class="recent-sessions">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3>💾 Saved Comparison Sessions</h3>
+                    <button class="toolbar-btn" id="btn-clear-saved" style="padding: 4px 8px; font-size: 0.75rem; color: var(--diff-del-text); border-color: var(--diff-del-border);">Clear All</button>
+                </div>
+                <div class="recent-list" id="saved-sessions-list">
+                    <!-- Populated dynamically via JS -->
+                    <div class="no-sessions-msg" style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem; background: var(--bg-panel); border-radius: 8px; border: 1px dashed var(--border-color);">
+                        No saved sessions yet. Configure any comparison and click "💾 Save Session" in the toolbar!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pre-loaded interactive Demos -->
+            <div class="recent-sessions" style="margin-top: 30px;">
+                <h3>Try a Live Comparison Demo</h3>
+                <div class="recent-list">
+                    <div class="recent-item" id="demo-auth-code">
+                        <div class="recent-item-info">
+                            <span class="recent-item-type">Text</span>
+                            <span class="recent-item-name">Authentication Middleware (JS Source Code Refactoring)</span>
+                        </div>
+                        <span class="recent-item-time">Load Sample ⚡</span>
+                    </div>
+                    <div class="recent-item" id="demo-env-json">
+                        <div class="recent-item-info">
+                            <span class="recent-item-type">Text</span>
+                            <span class="recent-item-name">Project Environment Configuration (JSON Compare)</span>
+                        </div>
+                        <span class="recent-item-time">Load Sample ⚡</span>
+                    </div>
+                    <div class="recent-item" id="demo-employee-csv">
+                        <div class="recent-item-info">
+                            <span class="recent-item-type">Table</span>
+                            <span class="recent-item-name">Company Employee Directory (CSV - Departures, Salary Upgrades, Promotions)</span>
+                        </div>
+                        <span class="recent-item-time">Load Sample ⚡</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 2. FOLDER COMPARE SESSION -->
+        <section class="panel-view" id="view-folder" style="padding: 0;">
+            <div class="compare-container">
+                <!-- Folder Toolbar -->
+                <div class="toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn active" id="folder-filter-all">Show All</button>
+                        <button class="toolbar-btn" id="folder-filter-diff">Differences</button>
+                        <button class="toolbar-btn" id="folder-filter-orphans">Orphans Only</button>
+                        <button class="toolbar-btn" id="folder-filter-same">Same</button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="folder-action-sync-lr" title="Copy missing/newer files from Left to Right">Sync Left ➔ Right</button>
+                        <button class="toolbar-btn" id="folder-action-sync-rl" title="Copy missing/newer files from Right to Left">Sync Right ➔ Left</button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="folder-action-save" title="Save this Folder comparison session">💾 Save Session</button>
+                    </div>
+
+                    <div class="toolbar-group" style="margin-left: auto;">
+                        <button class="toolbar-btn" id="folder-action-clear" style="color: var(--diff-del-text);">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Left/Right Load Directory Headers -->
+                <div class="file-bar">
+                    <div class="file-pane-header">
+                        <div class="file-name-display" id="folder-left-path">Left Folder (unloaded)</div>
+                        <div class="file-input-wrapper">
+                            <button class="toolbar-btn">📂 Select Left Folder</button>
+                            <input type="file" id="folder-left-input" webkitdirectory directory multiple>
+                        </div>
+                    </div>
+                    <div class="file-pane-header">
+                        <div class="file-name-display" id="folder-right-path">Right Folder (unloaded)</div>
+                        <div class="file-input-wrapper">
+                            <button class="toolbar-btn">📂 Select Right Folder</button>
+                            <input type="file" id="folder-right-input" webkitdirectory directory multiple>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder Split Workspace -->
+                <div class="folder-compare-workspace" id="folder-workspace">
+                    <!-- Drop overlay -->
+                    <div class="paste-drop-overlay" id="folder-empty-overlay">
+                        <div class="overlay-icon">📁</div>
+                        <h4 class="overlay-title">Select or Drag Directories Here</h4>
+                        <p class="overlay-desc">Select directories using the pickers above, or drag and drop folders directly onto this panel to compare their nested structures in real-time.</p>
+                        
+                        <div style="display: flex; gap: 15px; margin-top: 15px;">
+                            <button class="toolbar-btn active" id="btn-load-mock-folder" style="padding: 10px 20px;">⚡ Load Mock Directories</button>
+                        </div>
+                    </div>
+
+                    <!-- Left Folder Tree -->
+                    <div class="folder-tree-pane" id="folder-tree-left">
+                        <!-- Populated dynamically as tree nodes -->
+                    </div>
+
+                    <!-- Right Folder Tree -->
+                    <div class="folder-tree-pane" id="folder-tree-right">
+                        <!-- Populated dynamically as tree nodes -->
+                    </div>
+                </div>
+
+                <!-- Folder Status Bar -->
+                <div class="status-bar">
+                    <div id="folder-status-info">No directories compared</div>
+                    <div class="status-stats">
+                        <div class="stat-item"><span class="stat-dot del"></span> <span id="folder-stat-diff">0 different files</span></div>
+                        <div class="stat-item"><span class="stat-dot ins"></span> <span id="folder-stat-left-orphans">0 left orphans</span></div>
+                        <div class="stat-item"><span class="stat-dot mod"></span> <span id="folder-stat-right-orphans">0 right orphans</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 3. TEXT COMPARE SESSION -->
+        <section class="panel-view" id="view-text" style="padding: 0;">
+            <div class="compare-container">
+                <!-- Text Toolbar -->
+                <div class="toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn active" id="text-filter-all">Show All</button>
+                        <button class="toolbar-btn" id="text-filter-diff">Differences</button>
+                        <button class="toolbar-btn" id="text-filter-same">Same</button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="text-nav-prev" title="Previous Difference (Ctrl + Up)">▲ Prev Diff</button>
+                        <button class="toolbar-btn" id="text-nav-next" title="Next Difference (Ctrl + Down)">▼ Next Diff</button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="text-action-find" title="Toggle Search Panel (Ctrl + F)">🔍 Find</button>
+                        <button class="toolbar-btn" id="text-action-orientation" title="Toggle Side-by-Side vs Over-Under split layouts">↔️ Split View</button>
+                        <button class="toolbar-btn" id="text-action-swap" title="Swap Left and Right Panes">⇄ Swap Panes</button>
+                        <button class="toolbar-btn" id="text-action-rules" title="Diff Settings">⚙️ Rules</button>
+                        <button class="toolbar-btn" id="text-action-save" title="Save this Text comparison session">💾 Save Session</button>
+                        <button class="toolbar-btn" id="text-action-download" title="Export Edited File">📥 Download Left</button>
+                    </div>
+
+                    <div class="toolbar-group" style="margin-left: auto;">
+                        <button class="toolbar-btn" id="text-action-clear" style="color: var(--diff-del-text);">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Find & Replace Ribbon -->
+                <div class="find-replace-ribbon hidden" id="text-find-ribbon">
+                    <div class="ribbon-group" style="flex: 1;">
+                        <input type="text" id="find-input" placeholder="Find text..." class="ribbon-input">
+                        <input type="text" id="replace-input" placeholder="Replace with..." class="ribbon-input">
+                    </div>
+                    <div class="ribbon-group">
+                        <label class="ribbon-label"><input type="checkbox" id="find-case"> Case</label>
+                        <label class="ribbon-label"><input type="checkbox" id="find-regex"> Regex</label>
+                    </div>
+                    <div class="ribbon-group">
+                        <button class="toolbar-btn active" id="btn-find-next" style="padding: 4px 10px;">Next</button>
+                        <button class="toolbar-btn" id="btn-find-prev" style="padding: 4px 10px;">Prev</button>
+                        <button class="toolbar-btn" id="btn-replace" style="padding: 4px 10px;">Replace</button>
+                        <button class="toolbar-btn" id="btn-replace-all" style="padding: 4px 10px;">All</button>
+                        <button class="modal-close" id="btn-close-find" style="position: static; font-size: 1.2rem; cursor: pointer; padding: 0 8px;">×</button>
+                    </div>
+                </div>
+
+                <!-- Left/Right Load Headers -->
+                <div class="file-bar">
+                    <div class="file-pane-header">
+                        <div class="file-name-display" id="text-left-filename">left_file.txt</div>
+                        <div class="file-input-wrapper">
+                            <button class="toolbar-btn">📂 Open File</button>
+                            <input type="file" id="text-left-input">
+                        </div>
+                    </div>
+                    <div class="file-pane-header">
+                        <div class="file-name-display" id="text-right-filename">right_file.txt</div>
+                        <div class="file-input-wrapper">
+                            <button class="toolbar-btn">📂 Open File</button>
+                            <input type="file" id="text-right-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Compare Split Workspace (Horizontal layout by default, toggleable to vertical) -->
+                <div class="compare-workspace side-by-side" id="text-workspace">
+                    
+                    <!-- Drag-and-drop / Paste Overlay -->
+                    <div class="paste-drop-overlay" id="text-empty-overlay">
+                        <div class="overlay-icon">📝</div>
+                        <h4 class="overlay-title">Load Files to Start Comparing</h4>
+                        <p class="overlay-desc">Drag & drop your files directly onto the panel, browse your filesystem, or paste text blocks inside the text fields below.</p>
+                        
+                        <div class="paste-areas">
+                            <div class="paste-box">
+                                <label for="text-left-paste">Left Content</label>
+                                <textarea id="text-left-paste" placeholder="Paste left side text here..."></textarea>
+                            </div>
+                            <div class="paste-box">
+                                <label for="text-right-paste">Right Content</label>
+                                <textarea id="text-right-paste" placeholder="Paste right side text here..."></textarea>
+                            </div>
+                        </div>
+
+                        <button class="toolbar-btn active" id="text-btn-compare-paste" style="padding: 10px 24px; font-size: 0.95rem;">Compare Pasted Text ⇄</button>
+                    </div>
+
+                    <!-- Left Editor Scroll Panel -->
+                    <div class="editor-pane" id="editor-left-pane">
+                        <div class="editor-scroller" id="scroll-left">
+                            <div class="code-container">
+                                <!-- Line Numbers Gutter -->
+                                <div class="gutter-lines" id="gutter-left-lines"></div>
+                                <!-- Action Gutter (Copy block -> right) -->
+                                <div class="gutter-actions" id="gutter-left-actions"></div>
+                                <!-- Text content -->
+                                <div class="code-lines" id="code-left-lines" contenteditable="true" spellcheck="false"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Editor Scroll Panel -->
+                    <div class="editor-pane" id="editor-right-pane">
+                        <div class="editor-scroller" id="scroll-right">
+                            <div class="code-container">
+                                <!-- Line Numbers Gutter -->
+                                <div class="gutter-lines" id="gutter-right-lines"></div>
+                                <!-- Action Gutter (Copy block <- left) -->
+                                <div class="gutter-actions" id="gutter-right-actions"></div>
+                                <!-- Text content -->
+                                <div class="code-lines" id="code-right-lines" contenteditable="true" spellcheck="false"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diff Gutter Minimap -->
+                    <div class="diff-map-wrapper" id="diff-map-wrapper">
+                        <canvas class="diff-map-canvas" id="diff-map-canvas"></canvas>
+                        <div class="diff-map-viewport" id="diff-map-viewport"></div>
+                    </div>
+                </div>
+
+                <!-- Line Detail Magnifier Drawer -->
+                <div class="focused-line-drawer" id="text-line-drawer">
+                    <div class="drawer-header">🔎 Character-level Focused Line Details</div>
+                    <div class="drawer-content">
+                        <div class="detail-pane" id="detail-left-pane">Select a modified line in the editor to inspect focused details...</div>
+                        <div class="detail-pane" id="detail-right-pane">Select a modified line in the editor to inspect focused details...</div>
+                    </div>
+                </div>
+
+                <!-- Text Status Bar -->
+                <div class="status-bar">
+                    <div id="text-status-info">No files loaded</div>
+                    <div class="status-stats">
+                        <div class="stat-item"><span class="stat-dot del"></span> <span id="text-stat-deleted">0 deleted</span></div>
+                        <div class="stat-item"><span class="stat-dot ins"></span> <span id="text-stat-inserted">0 inserted</span></div>
+                        <div class="stat-item"><span class="stat-dot mod"></span> <span id="text-stat-modified">0 modified</span></div>
+                        <div class="stat-item" id="text-cursor-pos">Ln 1, Col 1</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 4. TABLE COMPARE SESSION -->
+        <section class="panel-view" id="view-table" style="padding: 0;">
+            <div class="compare-container">
+                <!-- Table Toolbar -->
+                <div class="toolbar">
+                    <div class="toolbar-group select-group" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <label for="table-filter-select">🔍 Filter:</label>
+                        <select id="table-filter-select" style="padding: 5px 8px; font-size: 0.8rem; min-width: 120px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px;">
+                            <option value="all">Show All</option>
+                            <option value="diff">Differences</option>
+                            <option value="same">Same</option>
+                            <option value="missing-left">Missing Left</option>
+                            <option value="missing-right">Missing Right</option>
+                        </select>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="table-action-copy-left" title="Copy Left Table (Tab-separated for Excel)">📋 Copy Left</button>
+                        <button class="toolbar-btn" id="table-action-copy-right" title="Copy Right Table (Tab-separated for Excel)">📋 Copy Right</button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Key Column Selection -->
+                    <div class="toolbar-group select-group" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <label for="table-key-select">🔑 Row Key:</label>
+                        <select id="table-key-select" style="padding: 5px 8px; font-size: 0.8rem; max-width: 150px;">
+                            <option value="">(None - Compare Sequentially)</option>
+                        </select>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="table-action-swap" title="Swap Left and Right Tables">⇄ Swap Panes</button>
+                        <button class="toolbar-btn" id="table-action-rules" title="Column Comparison Settings">⚙️ Column Rules</button>
+                        <button class="toolbar-btn" id="table-action-save" title="Save this Table comparison session">💾 Save Session</button>
+                        <button class="toolbar-btn" id="table-action-export" title="Export Left Table as CSV">📥 Export Left</button>
+                    </div>
+
+                    <div class="toolbar-group" style="margin-left: auto;">
+                        <button class="toolbar-btn" id="table-action-clear" style="color: var(--diff-del-text);">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Excel Sheet Selector Tab Ribbon -->
+                <div class="sheet-tabs-container hidden" id="table-sheet-tabs-container">
+                    <div class="sheet-tabs-label">📁 Workbook Sheets:</div>
+                    <div class="sheet-tabs" id="table-sheet-tabs">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Left/Right Load Headers -->
+                <div class="file-bar">
+                    <div class="file-pane-header">
+                        <div class="file-name-display" id="table-left-filename">left_table.csv</div>
+                        <div class="file-input-wrapper">
+                            <button class="toolbar-btn">📂 Open CSV/Excel</button>
+                            <input type="file" id="table-left-input" accept=".csv,.tsv,.xlsx,.xls,.txt">
+                        </div>
+                    </div>
+                    <div class="file-pane-header">
+                        <div class="file-name-display" id="table-right-filename">right_table.csv</div>
+                        <div class="file-input-wrapper">
+                            <button class="toolbar-btn">📂 Open CSV/Excel</button>
+                            <input type="file" id="table-right-input" accept=".csv,.tsv,.xlsx,.xls,.txt">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Workspace -->
+                <div class="table-compare-workspace" id="table-workspace">
+                    
+                    <!-- Drag-and-drop / Paste Overlay -->
+                    <div class="paste-drop-overlay" id="table-empty-overlay">
+                        <div class="overlay-icon">📊</div>
+                        <h4 class="overlay-title">Load CSV or Excel Spreadsheets</h4>
+                        <p class="overlay-desc">Drag & drop your .csv, .tsv, .xlsx, or .xls files directly, browse your filesystem, or paste raw tabular blocks below.</p>
+                        
+                        <div class="paste-areas">
+                            <div class="paste-box">
+                                <label for="table-left-paste">Left Spreadsheet Data</label>
+                                <textarea id="table-left-paste" placeholder="ID,Name,Price&#10;1,Gadget,9.99&#10;2,Widget,19.99"></textarea>
+                            </div>
+                            <div class="paste-box">
+                                <label for="table-right-paste">Right Spreadsheet Data</label>
+                                <textarea id="table-right-paste" placeholder="ID,Name,Price&#10;1,Gadget,10.99&#10;3,Super Widget,24.99"></textarea>
+                            </div>
+                        </div>
+
+                        <button class="toolbar-btn active" id="table-btn-compare-paste" style="padding: 10px 24px; font-size: 0.95rem;">Compare Spreadsheets ⇄</button>
+                    </div>
+
+                    <!-- Left Table Scroll Pane -->
+                    <div class="table-scroller" id="table-scroll-left">
+                        <table class="compare-grid-table" id="grid-left-table">
+                            <!-- Populated Dynamically -->
+                        </table>
+                    </div>
+
+                    <!-- Right Table Scroll Pane -->
+                    <div class="table-scroller" id="table-scroll-right">
+                        <table class="compare-grid-table" id="grid-right-table">
+                            <!-- Populated Dynamically -->
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Table Summary Bottom Gutter Magnifier -->
+                <div class="focused-line-drawer" id="table-detail-drawer">
+                    <div class="drawer-header">🔍 Focused Cell Differences & Summary Info</div>
+                    <div class="drawer-content" style="padding: 12px 16px; font-size: 0.85rem; display: flex; gap: 24px;">
+                        <div style="flex: 1;" id="table-cell-detail">Click any cell in the spreadsheet grid to inspect active comparisons and details...</div>
+                        <div style="width: 250px; border-left: 1px solid var(--border-color); padding-left: 20px;" id="table-sheet-summary">
+                            <strong>Sheet Metrics:</strong><br>
+                            Rows aligned: <span id="lbl-aligned-rows">0</span><br>
+                            Differences: <span id="lbl-aligned-diffs">0</span><br>
+                            Muted changes: <span id="lbl-aligned-unimportant">0</span><br>
+                            Missing from Left: <span id="lbl-aligned-missing-left">0</span><br>
+                            Missing from Right: <span id="lbl-aligned-missing-right">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Status Bar -->
+                <div class="status-bar">
+                    <div id="table-status-info">No spreadsheet loaded</div>
+                    <div class="status-stats">
+                        <div class="stat-item"><span class="stat-dot del"></span> <span id="table-stat-deleted">0 deleted rows</span></div>
+                        <div class="stat-item"><span class="stat-dot ins"></span> <span id="table-stat-inserted">0 inserted rows</span></div>
+                        <div class="stat-item"><span class="stat-dot mod"></span> <span id="table-stat-modified">0 mismatching rows</span></div>
+                        <div class="stat-item" id="table-cursor-pos">Rows: 0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Dialog: Rules / Settings -->
+    <div class="modal-overlay" id="rules-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ Comparison Rules</div>
+                <button class="modal-close" id="rules-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rule-whitespace" checked>
+                        Ignore line whitespace differences
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rule-case">
+                        Case-insensitive comparison
+                    </label>
+                </div>
+
+                <div class="select-group">
+                    <label for="rule-align-mode">LCS Alignment Performance Strategy:</label>
+                    <select id="rule-align-mode">
+                        <option value="myers">Standard Myers (Precise)</option>
+                        <option value="greedy">Greedy LCS (High speed)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="toolbar-btn" id="rules-btn-cancel">Cancel</button>
+                <button class="toolbar-btn active" id="rules-btn-apply">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog: Table Column Rules -->
+    <div class="modal-overlay" id="table-rules-modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <div class="modal-title">📊 Column Comparison Rules</div>
+                <button class="modal-close" id="table-rules-modal-close">×</button>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto; padding-right: 8px;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Define the classification for each column. Key columns align rows naturally. Standard columns highlight critical changes in red. Unimportant columns highlight changes in muted gray without marking rows as modified. Ignored columns are bypassed entirely.
+                </p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;" id="table-rules-list">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                            <th style="padding: 8px 4px; color: var(--text-muted);">Column Name</th>
+                            <th style="padding: 8px 4px; text-align: center; color: var(--text-muted);">🔑 Key</th>
+                            <th style="padding: 8px 4px; text-align: center; color: var(--text-muted);">📝 Standard</th>
+                            <th style="padding: 8px 4px; text-align: center; color: var(--text-muted);">🔍 Unimportant</th>
+                            <th style="padding: 8px 4px; text-align: center; color: var(--text-muted);">🚫 Ignore</th>
+                            <th style="padding: 8px 4px; text-align: center; color: var(--text-muted);">🔤 Data Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-rules-tbody">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="toolbar-btn" id="table-rules-btn-cancel">Cancel</button>
+                <button class="toolbar-btn active" id="table-rules-btn-apply">Apply Rules</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="diff.js"></script>
+    <script src="samples.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
