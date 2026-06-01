@@ -1517,3 +1517,38 @@ main.main-content {
     color: var(--diff-del-text);
 }
 
+/* Delete column button in Table Headers */
+.compare-grid-table th {
+    position: relative;
+    padding-right: 26px !important;
+}
+
+.delete-col-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    line-height: 13px;
+    text-align: center;
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    z-index: 10;
+}
+
+.delete-col-btn:hover {
+    background: #f43f5e;
+    color: #ffffff;
+    border-color: #f43f5e;
+    transform: translateY(-50%) scale(1.15);
+}
+
+

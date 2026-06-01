@@ -921,8 +921,22 @@ document.addEventListener("DOMContentLoaded", () => {
         isSyncingTableScroll = false;
     });
 
-    // Simple self-contained robust CSV string parser
-    function parseCSVData(csvText) {
+    // Simple helper to detect column delimiter in uploaded files
+    function detectDelimiter(text) {
+        const firstLine = text.split(/\r?\n/)[0] || "";
+        const commaCount = (firstLine.match(/,/g) || []).length;
+        const tabCount = (firstLine.match(/\t/g) || []).length;
+        const semiCount = (firstLine.match(/;/g) || []).length;
+        const pipeCount = (firstLine.match(/\|/g) || []).length;
+        
+        if (tabCount > commaCount && tabCount > semiCount && tabCount > pipeCount) return "\t";
+        if (semiCount > commaCount && semiCount > tabCount && semiCount > pipeCount) return ";";
+        if (pipeCount > commaCount && pipeCount > tabCount && pipeCount > semiCount) return "|";
+        return ","; // Default
+    }
+
+    // Robust CSV/TSV/DSV string parser with delimiter parameter
+    function parseCSVData(csvText, delimChar = ',') {
         const lines = csvText.split(/\r?\n/);
         const rows = [];
         let headers = [];
@@ -938,7 +952,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const char = line[i];
                 if (char === '"') {
                     inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
+                } else if (char === delimChar && !inQuotes) {
                     row.push(current.trim());
                     current = '';
                 } else {
@@ -999,10 +1013,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Set key dropdown listener
     elements.tableKeySelect.addEventListener("change", (e) => {
         const newKey = e.target.value;
         
-        // Set new key column, demoting other keys back to standard
+        // Update setting mappings for all unique cols
         const allUniqueCols = Array.from(new Set([...leftTableCols, ...rightTableCols]));
         allUniqueCols.forEach(col => {
             const setting = tableColumnSettings[col];
@@ -1025,6 +1040,37 @@ document.addEventListener("DOMContentLoaded", () => {
         compareTableSession();
     });
 
+    // Dynamically delete columns from the comparison workspace
+    window.removeTableColumn = function(colName) {
+        const leftIdx = leftTableCols.indexOf(colName);
+        if (leftIdx !== -1) {
+            leftTableCols.splice(leftIdx, 1);
+            leftTableData.forEach(row => {
+                row.splice(leftIdx, 1);
+            });
+        }
+        
+        const rightIdx = rightTableCols.indexOf(colName);
+        if (rightIdx !== -1) {
+            rightTableCols.splice(rightIdx, 1);
+            rightTableData.forEach(row => {
+                row.splice(rightIdx, 1);
+            });
+        }
+        
+        if (tableColumnSettings[colName]) {
+            delete tableColumnSettings[colName];
+        }
+        
+        if (selectedKeyColumn === colName) {
+            selectedKeyColumn = "";
+            elements.tableKeySelect.value = "";
+        }
+        
+        populateKeyDropdown();
+        compareTableSession();
+    };
+
     function renderTableCompare() {
         // Headers Building
         let leftHeaderHTML = `<tr><th class="table-row-num">#</th>`;
@@ -1035,7 +1081,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (colClass === 'key') headerClass = 'key-column';
             else if (colClass === 'unimportant') headerClass = 'unimportant-column';
             else if (colClass === 'ignored') headerClass = 'ignored-column';
-            leftHeaderHTML += `<th class="${headerClass}">${col}</th>`;
+            
+            leftHeaderHTML += `<th class="${headerClass}">
+                <span class="col-header-text">${col}</span>
+                <span class="delete-col-btn" title="Remove column from comparison" onclick="event.stopPropagation(); window.removeTableColumn('${col}')">×</span>
+            </th>`;
         });
         leftHeaderHTML += "</tr>";
 
@@ -1047,7 +1097,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (colClass === 'key') headerClass = 'key-column';
             else if (colClass === 'unimportant') headerClass = 'unimportant-column';
             else if (colClass === 'ignored') headerClass = 'ignored-column';
-            rightHeaderHTML += `<th class="${headerClass}">${col}</th>`;
+            
+            rightHeaderHTML += `<th class="${headerClass}">
+                <span class="col-header-text">${col}</span>
+                <span class="delete-col-btn" title="Remove column from comparison" onclick="event.stopPropagation(); window.removeTableColumn('${col}')">×</span>
+            </th>`;
         });
         rightHeaderHTML += "</tr>";
 
@@ -1390,7 +1444,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (side === "left") leftWorkbook = null;
                 else rightWorkbook = null;
 
-                const parsed = parseCSVData(e.target.result);
+                const delim = detectDelimiter(e.target.result);
+                const parsed = parseCSVData(e.target.result, delim);
                 if (side === "left") {
                     leftTableCols = parsed.headers;
                     leftTableData = parsed.rows;
@@ -1450,8 +1505,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     elements.tableBtnComparePaste.addEventListener("click", () => {
-        const parsedLeft = parseCSVData(elements.tableLeftPaste.value);
-        const parsedRight = parseCSVData(elements.tableRightPaste.value);
+        const delimiterSelect = document.getElementById("table-paste-delimiter");
+        let delim = ",";
+        if (delimiterSelect) {
+            const val = delimiterSelect.value;
+            if (val === "tab") delim = "\t";
+            else if (val === "semicolon") delim = ";";
+            else if (val === "pipe") delim = "|";
+        }
+
+        const parsedLeft = parseCSVData(elements.tableLeftPaste.value, delim);
+        const parsedRight = parseCSVData(elements.tableRightPaste.value, delim);
 
         leftTableCols = parsedLeft.headers;
         leftTableData = parsedLeft.rows;

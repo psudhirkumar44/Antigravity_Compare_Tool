@@ -450,6 +450,15 @@
                                 <textarea id="table-right-paste" placeholder="ID,Name,Price&#10;1,Gadget,10.99&#10;3,Super Widget,24.99"></textarea>
                             </div>
                         </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; justify-content: center; font-size: 0.85rem; color: var(--text-main);">
+                            <label for="table-paste-delimiter" style="font-weight: 500;">📋 Paste Delimiter:</label>
+                            <select id="table-paste-delimiter" style="padding: 6px 12px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; cursor: pointer; outline: none;">
+                                <option value="comma">Comma (,)</option>
+                                <option value="tab">Tab (Excel paste / TSV)</option>
+                                <option value="semicolon">Semicolon (;)</option>
+                                <option value="pipe">Pipe (|)</option>
+                            </select>
+                        </div>
 
                         <button class="toolbar-btn active" id="table-btn-compare-paste" style="padding: 10px 24px; font-size: 0.95rem;">Compare Spreadsheets ⇄</button>
                     </div>
