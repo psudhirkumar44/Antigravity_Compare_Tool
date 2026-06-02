@@ -1071,6 +1071,46 @@ document.addEventListener("DOMContentLoaded", () => {
         compareTableSession();
     };
 
+    // Dynamically delete rows from the comparison workspace
+    window.removeTableRow = function(side, rIdx) {
+        if (side === "left") {
+            if (rIdx >= 0 && rIdx < leftTableData.length) {
+                leftTableData.splice(rIdx, 1);
+            }
+        } else {
+            if (rIdx >= 0 && rIdx < rightTableData.length) {
+                rightTableData.splice(rIdx, 1);
+            }
+        }
+        compareTableSession();
+    };
+
+    // Capture editing blur events on spreadsheet cells to sync modifications
+    const handleCellBlur = (e) => {
+        const td = e.target.closest("td[contenteditable='true']");
+        if (!td) return;
+
+        const side = td.getAttribute("data-side");
+        const rIdx = parseInt(td.getAttribute("data-row"), 10);
+        const cIdx = parseInt(td.getAttribute("data-col"), 10);
+        const newVal = td.textContent.trim();
+
+        if (side === "left") {
+            if (leftTableData[rIdx]) {
+                leftTableData[rIdx][cIdx] = newVal;
+            }
+        } else {
+            if (rightTableData[rIdx]) {
+                rightTableData[rIdx][cIdx] = newVal;
+            }
+        }
+
+        compareTableSession();
+    };
+
+    elements.gridLeftTable.addEventListener("blur", handleCellBlur, true);
+    elements.gridRightTable.addEventListener("blur", handleCellBlur, true);
+
     function renderTableCompare() {
         // Headers Building
         let leftHeaderHTML = `<tr><th class="table-row-num">#</th>`;
@@ -1131,7 +1171,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Left row HTML
                 leftRowsHTML += `<tr class="${rowClass}">`;
-                leftRowsHTML += `<td class="table-row-num">${lIdx + 1}</td>`;
+                leftRowsHTML += `<td class="table-row-num">
+                    <span class="row-num-text">${lIdx + 1}</span>
+                    <span class="delete-row-btn" title="Delete Row" onclick="event.stopPropagation(); window.removeTableRow('left', ${lIdx})">×</span>
+                </td>`;
                 leftTableCols.forEach((col, cIdx) => {
                     const setting = tableColumnSettings[col];
                     const colClass = (setting && typeof setting !== 'string') ? (setting.class || 'standard') : (setting || 'standard');
@@ -1147,13 +1190,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     const cellVal = leftRow[cIdx];
                     const formatted = window.DiffEngine.formatCellValue(cellVal, colType);
-                    leftRowsHTML += `<td class="${cellClass}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
+                    leftRowsHTML += `<td class="${cellClass}" contenteditable="true" data-side="left" data-row="${lIdx}" data-col="${cIdx}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
                 });
                 leftRowsHTML += "</tr>";
 
                 // Right row HTML
                 rightRowsHTML += `<tr class="${rowClass}">`;
-                rightRowsHTML += `<td class="table-row-num">${rIdx + 1}</td>`;
+                rightRowsHTML += `<td class="table-row-num">
+                    <span class="row-num-text">${rIdx + 1}</span>
+                    <span class="delete-row-btn" title="Delete Row" onclick="event.stopPropagation(); window.removeTableRow('right', ${rIdx})">×</span>
+                </td>`;
                 rightTableCols.forEach((col, cIdx) => {
                     const setting = tableColumnSettings[col];
                     const colClass = (setting && typeof setting !== 'string') ? (setting.class || 'standard') : (setting || 'standard');
@@ -1169,21 +1215,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     const cellVal = rightRow[cIdx];
                     const formatted = window.DiffEngine.formatCellValue(cellVal, colType);
-                    rightRowsHTML += `<td class="${cellClass}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
+                    rightRowsHTML += `<td class="${cellClass}" contenteditable="true" data-side="right" data-row="${rIdx}" data-col="${cIdx}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
                 });
                 rightRowsHTML += "</tr>";
             } 
             else if (alignedRow.type === 'delete') {
                 // Row exists only in left
                 leftRowsHTML += `<tr class="grid-row diff-deleted">`;
-                leftRowsHTML += `<td class="table-row-num">${alignedRow.leftIndex + 1}</td>`;
+                leftRowsHTML += `<td class="table-row-num">
+                    <span class="row-num-text">${alignedRow.leftIndex + 1}</span>
+                    <span class="delete-row-btn" title="Delete Row" onclick="event.stopPropagation(); window.removeTableRow('left', ${alignedRow.leftIndex})">×</span>
+                </td>`;
                 leftTableCols.forEach((col, cIdx) => {
                     const setting = tableColumnSettings[col];
                     const colClass = (setting && typeof setting !== 'string') ? (setting.class || 'standard') : (setting || 'standard');
                     const colType = (setting && typeof setting !== 'string') ? (setting.type || 'text') : autoDetectType(col);
                     const cellVal = alignedRow.leftRow[cIdx];
                     const formatted = window.DiffEngine.formatCellValue(cellVal, colType);
-                    leftRowsHTML += `<td class="${colClass === 'key' ? 'grid-cell-key' : ''}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
+                    leftRowsHTML += `<td class="${colClass === 'key' ? 'grid-cell-key' : ''}" contenteditable="true" data-side="left" data-row="${alignedRow.leftIndex}" data-col="${cIdx}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
                 });
                 leftRowsHTML += "</tr>";
 
@@ -1206,14 +1255,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Row exists only in right
                 rightRowsHTML += `<tr class="grid-row diff-inserted">`;
-                rightRowsHTML += `<td class="table-row-num">${alignedRow.rightIndex + 1}</td>`;
+                rightRowsHTML += `<td class="table-row-num">
+                    <span class="row-num-text">${alignedRow.rightIndex + 1}</span>
+                    <span class="delete-row-btn" title="Delete Row" onclick="event.stopPropagation(); window.removeTableRow('right', ${alignedRow.rightIndex})">×</span>
+                </td>`;
                 rightTableCols.forEach((col, cIdx) => {
                     const setting = tableColumnSettings[col];
                     const colClass = (setting && typeof setting !== 'string') ? (setting.class || 'standard') : (setting || 'standard');
                     const colType = (setting && typeof setting !== 'string') ? (setting.type || 'text') : autoDetectType(col);
                     const cellVal = alignedRow.rightRow[cIdx];
                     const formatted = window.DiffEngine.formatCellValue(cellVal, colType);
-                    rightRowsHTML += `<td class="${colClass === 'key' ? 'grid-cell-key' : ''}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
+                    rightRowsHTML += `<td class="${colClass === 'key' ? 'grid-cell-key' : ''}" contenteditable="true" data-side="right" data-row="${alignedRow.rightIndex}" data-col="${cIdx}">${window.DiffEngine.escapeHtml(formatted)}</td>`;
                 });
                 rightRowsHTML += "</tr>";
             }
